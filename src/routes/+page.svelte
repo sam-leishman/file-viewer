@@ -43,9 +43,11 @@
             filePreviewContent = null;
             showingSearchResults = false;
             await loadDirectoryContents(dirHandle);
-        } catch (err) {
-            console.error('Error selecting directory:', err);
-            error = 'Failed to open directory';
+        } catch (err: unknown) {
+            if (err instanceof Error && err.name !== 'AbortError') {
+                console.error('Error selecting directory:', err);
+                error = 'Failed to open directory';
+            }
         }
     }
 
@@ -70,9 +72,11 @@
                 }
                 return a.name.localeCompare(b.name);
             });
-        } catch (err) {
-            console.error('Error reading directory contents:', err);
-            error = 'Failed to read directory contents';
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                console.error('Error reading directory contents:', err);
+                error = 'Failed to read directory contents';
+            }
         } finally {
             isLoading = false;
         }
@@ -89,9 +93,11 @@
             const normalizedQuery = String(query).trim().toLowerCase();
             searchResults = await recursiveSearch(selectedDirectory, normalizedQuery, selectedDirectory.name);
             showingSearchResults = true;
-        } catch (err) {
-            console.error('Error searching files:', err);
-            error = 'Failed to search files';
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                console.error('Error searching files:', err);
+                error = 'Failed to search files';
+            }
         } finally {
             isSearching = false;
         }
@@ -132,13 +138,17 @@
                         const dirHandle = entry as FileSystemDirectoryHandle;
                         const subdirResults = await recursiveSearch(dirHandle, query, path);
                         results.push(...subdirResults);
-                    } catch (err) {
-                        console.error(`Error searching subdirectory ${path}:`, err);
+                    } catch (err: unknown) {
+                        if (err instanceof Error) {
+                            console.error(`Error searching subdirectory ${path}:`, err);
+                        }
                     }
                 }
             }
-        } catch (err) {
-            console.error(`Error searching directory ${currentPath}:`, err);
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                console.error(`Error searching directory ${currentPath}:`, err);
+            }
         }
         
         return results;
@@ -153,9 +163,11 @@
                 filePreviewContent = null;
                 showingSearchResults = false;
                 await loadDirectoryContents(dirHandle);
-            } catch (err) {
-                console.error('Error opening directory:', err);
-                error = 'Failed to open directory';
+            } catch (err: unknown) {
+                if (err instanceof Error && err.name !== 'AbortError') {
+                    console.error('Error opening directory:', err);
+                    error = 'Failed to open directory';
+                }
             }
         } else {
             await previewFile(item);
@@ -198,9 +210,11 @@
                 // No preview available
                 filePreviewContent = null;
             }
-        } catch (err) {
-            console.error('Error previewing file:', err);
-            previewError = 'Failed to preview file';
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                console.error('Error previewing file:', err);
+                previewError = 'Failed to preview file';
+            }
         } finally {
             isLoadingPreview = false;
         }
@@ -234,7 +248,7 @@
                 <div class="p-6 text-center">
                     <p class="mb-4 text-gray-600">Select a directory to view its contents</p>
                     <button
-                        on:click={() => handleDirectorySelect()}
+                        on:click={handleDirectorySelect}
                         class="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                     >
                         Choose Directory
